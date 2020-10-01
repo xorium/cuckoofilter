@@ -49,7 +49,7 @@ func (cf *Filter) Reset() {
 }
 
 func randi(i1, i2 uint) uint {
-	if rand.Intn(2) == 0 {
+	if rand.Int31()%2 == 0 {
 		return i1
 	}
 	return i2
