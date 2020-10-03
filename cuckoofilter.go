@@ -1,6 +1,7 @@
 package cuckoo
 
 import (
+	"encoding/binary"
 	"fmt"
 	"math/bits"
 	"math/rand"
@@ -80,9 +81,8 @@ func (cf *Filter) insert(fp fingerprint, i uint) bool {
 func (cf *Filter) reinsert(fp fingerprint, i uint) bool {
 	for k := 0; k < maxCuckooCount; k++ {
 		j := rand.Intn(bucketSize)
-		oldfp := fp
-		fp = cf.buckets[i][j]
-		cf.buckets[i][j] = oldfp
+		// Swap fp with bucket entry.
+		cf.buckets[i][j], fp = fp, cf.buckets[i][j]
 
 		// look in the alternate location for that random element
 		i = getAltIndex(fp, i, cf.bucketPow)
@@ -114,13 +114,14 @@ func (cf *Filter) Count() uint {
 
 // Encode returns a byte slice representing a Cuckoofilter
 func (cf *Filter) Encode() []byte {
-	bytes := make([]byte, len(cf.buckets)*bucketSize)
-	// for i, b := range cf.buckets {
-	// 	for j, f := range b {
-	// 		index := (i * len(b)) + j
-	// 		bytes[index] = f
-	// 	}
-	// }
+	bytes := make([]byte, 0, len(cf.buckets)*bucketSize*fingerprintSizeBits/8)
+	for _, b := range cf.buckets {
+		for _, f := range b {
+			next := make([]byte, 2)
+			binary.LittleEndian.PutUint16(next, uint16(f))
+			bytes = append(bytes, next...)
+		}
+	}
 	return bytes
 }
 
@@ -130,16 +131,18 @@ func Decode(bytes []byte) (*Filter, error) {
 	if len(bytes)%bucketSize != 0 {
 		return nil, fmt.Errorf("expected bytes to be multiple of %d, got %d", bucketSize, len(bytes))
 	}
-	buckets := make([]bucket, len(bytes)/4)
-	// for i, b := range buckets {
-	// 	for j := range b {
-	// 		index := (i * len(b)) + j
-	// 		if bytes[index] != 0 {
-	// 			buckets[i][j] = bytes[index]
-	// 			count++
-	// 		}
-	// 	}
-	// }
+	buckets := make([]bucket, len(bytes)/4*8/fingerprintSizeBits)
+	for i, b := range buckets {
+		for j := range b {
+			var next []byte
+			next, bytes = bytes[0:2], bytes[2:]
+
+			if fp := fingerprint(binary.LittleEndian.Uint16(next)); fp != 0 {
+				buckets[i][j] = fp
+				count++
+			}
+		}
+	}
 	return &Filter{
 		buckets:   buckets,
 		count:     count,

@@ -18,7 +18,6 @@ func init() {
 
 func getAltIndex(fp fingerprint, i uint, bucketPow uint) uint {
 	mask := masks[bucketPow]
-	// TODO(panmari): Optimize.
 	b := make([]byte, 2)
 	binary.LittleEndian.PutUint16(b, uint16(fp))
 	hash := uint(metro.Hash64(b, 1337))

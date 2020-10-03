@@ -1,5 +1,10 @@
 package cuckoo
 
+import (
+	"bytes"
+	"fmt"
+)
+
 type fingerprint uint16
 
 type bucket [bucketSize]fingerprint
@@ -43,4 +48,14 @@ func (b *bucket) reset() {
 	for i := range b {
 		b[i] = nullFp
 	}
+}
+
+func (b *bucket) String() string {
+	var buf bytes.Buffer
+	buf.WriteString("[")
+	for _, by := range b {
+		buf.WriteString(fmt.Sprintf("%5d ", by))
+	}
+	buf.WriteString("]")
+	return buf.String()
 }
