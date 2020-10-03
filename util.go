@@ -1,37 +1,38 @@
 package cuckoo
 
 import (
+	"encoding/binary"
+
 	metro "github.com/dgryski/go-metro"
 )
 
 var (
-	altHash = [256]uint{}
-	masks   = [65]uint{}
+	masks = [65]uint{}
 )
 
 func init() {
-	for i := 0; i < 256; i++ {
-		altHash[i] = (uint(metro.Hash64([]byte{byte(i)}, 1337)))
-	}
 	for i := uint(0); i <= 64; i++ {
 		masks[i] = (1 << i) - 1
 	}
 }
 
-func getAltIndex(fp byte, i uint, bucketPow uint) uint {
+func getAltIndex(fp fingerprint, i uint, bucketPow uint) uint {
 	mask := masks[bucketPow]
-	hash := altHash[fp] & mask
-	return (i & mask) ^ hash
+	// TODO(panmari): Optimize.
+	b := make([]byte, 2)
+	binary.LittleEndian.PutUint16(b, uint16(fp))
+	hash := uint(metro.Hash64(b, 1337))
+	return (i ^ hash) & mask
 }
 
-func getFingerprint(hash uint64) byte {
+func getFingerprint(hash uint64) fingerprint {
 	// Use least significant bits for fingerprint.
-	fp := byte(hash%255 + 1)
+	fp := fingerprint(hash%(1<<fingerprintSizeBits-1) + 1)
 	return fp
 }
 
 // getIndicesAndFingerprint returns the 2 bucket indices and fingerprint to be used
-func getIndicesAndFingerprint(data []byte, bucketPow uint) (uint, uint, byte) {
+func getIndicesAndFingerprint(data []byte, bucketPow uint) (uint, uint, fingerprint) {
 	hash := metro.Hash64(data, 1337)
 	f := getFingerprint(hash)
 	// Use most significant bits for deriving index.

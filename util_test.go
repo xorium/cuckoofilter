@@ -134,7 +134,7 @@ func BenchmarkFilter_Lookup(b *testing.B) {
 
 func TestBucket_Reset(t *testing.T) {
 	var bkt bucket
-	for i := byte(0); i < bucketSize; i++ {
+	for i := fingerprint(0); i < bucketSize; i++ {
 		bkt[i] = i
 	}
 	fmt.Println(bkt)

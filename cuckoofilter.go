@@ -69,7 +69,7 @@ func (cf *Filter) InsertUnique(data []byte) bool {
 	return cf.Insert(data)
 }
 
-func (cf *Filter) insert(fp byte, i uint) bool {
+func (cf *Filter) insert(fp fingerprint, i uint) bool {
 	if cf.buckets[i].insert(fp) {
 		cf.count++
 		return true
@@ -77,7 +77,7 @@ func (cf *Filter) insert(fp byte, i uint) bool {
 	return false
 }
 
-func (cf *Filter) reinsert(fp byte, i uint) bool {
+func (cf *Filter) reinsert(fp fingerprint, i uint) bool {
 	for k := 0; k < maxCuckooCount; k++ {
 		j := rand.Intn(bucketSize)
 		oldfp := fp
@@ -99,7 +99,7 @@ func (cf *Filter) Delete(data []byte) bool {
 	return cf.delete(fp, i1) || cf.delete(fp, i2)
 }
 
-func (cf *Filter) delete(fp byte, i uint) bool {
+func (cf *Filter) delete(fp fingerprint, i uint) bool {
 	if cf.buckets[i].delete(fp) {
 		cf.count--
 		return true
@@ -115,12 +115,12 @@ func (cf *Filter) Count() uint {
 // Encode returns a byte slice representing a Cuckoofilter
 func (cf *Filter) Encode() []byte {
 	bytes := make([]byte, len(cf.buckets)*bucketSize)
-	for i, b := range cf.buckets {
-		for j, f := range b {
-			index := (i * len(b)) + j
-			bytes[index] = f
-		}
-	}
+	// for i, b := range cf.buckets {
+	// 	for j, f := range b {
+	// 		index := (i * len(b)) + j
+	// 		bytes[index] = f
+	// 	}
+	// }
 	return bytes
 }
 
@@ -131,15 +131,15 @@ func Decode(bytes []byte) (*Filter, error) {
 		return nil, fmt.Errorf("expected bytes to be multiple of %d, got %d", bucketSize, len(bytes))
 	}
 	buckets := make([]bucket, len(bytes)/4)
-	for i, b := range buckets {
-		for j := range b {
-			index := (i * len(b)) + j
-			if bytes[index] != 0 {
-				buckets[i][j] = bytes[index]
-				count++
-			}
-		}
-	}
+	// for i, b := range buckets {
+	// 	for j := range b {
+	// 		index := (i * len(b)) + j
+	// 		if bytes[index] != 0 {
+	// 			buckets[i][j] = bytes[index]
+	// 			count++
+	// 		}
+	// 	}
+	// }
 	return &Filter{
 		buckets:   buckets,
 		count:     count,
