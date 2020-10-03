@@ -40,6 +40,7 @@ func (cf *Filter) Lookup(data []byte) bool {
 	return b1.getFingerprintIndex(fp) > -1 || b2.getFingerprintIndex(fp) > -1
 }
 
+// Reset removes all items from the filter, setting count to 0.
 func (cf *Filter) Reset() {
 	for i := range cf.buckets {
 		cf.buckets[i].reset()
