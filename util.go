@@ -16,12 +16,11 @@ func init() {
 	}
 }
 
-func getAltIndex(fp fingerprint, i uint, bucketPow uint) uint {
-	mask := masks[bucketPow]
+func getAltIndex(fp fingerprint, i uint, maxIndex uint) uint {
 	b := make([]byte, 2)
 	binary.LittleEndian.PutUint16(b, uint16(fp))
 	hash := uint(metro.Hash64(b, 1337))
-	return (i ^ hash) & mask
+	return (i ^ hash) % maxIndex
 }
 
 func getFingerprint(hash uint64) fingerprint {
@@ -30,14 +29,13 @@ func getFingerprint(hash uint64) fingerprint {
 	return fp
 }
 
-// getIndicesAndFingerprint returns the 2 bucket indices and fingerprint to be used
-func getIndicesAndFingerprint(data []byte, bucketPow uint) (uint, uint, fingerprint) {
+// getIndexAndFingerprint returns the primary bucket index and fingerprint to be used
+func getIndexAndFingerprint(data []byte, maxIndex uint) (uint, fingerprint) {
 	hash := metro.Hash64(data, 1337)
 	f := getFingerprint(hash)
 	// Use most significant bits for deriving index.
-	i1 := uint(hash>>32) & masks[bucketPow]
-	i2 := getAltIndex(f, i1, bucketPow)
-	return i1, i2, f
+	i1 := uint(hash>>32) % maxIndex
+	return i1, f
 }
 
 func getNextPow2(n uint64) uint {

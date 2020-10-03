@@ -3,7 +3,6 @@ package cuckoo
 import (
 	"encoding/binary"
 	"fmt"
-	"math/bits"
 	"math/rand"
 )
 
@@ -11,30 +10,32 @@ const maxCuckooCount = 500
 
 // Filter is a probabilistic counter
 type Filter struct {
-	buckets   []bucket
-	count     uint
-	bucketPow uint
+	buckets    []bucket
+	count      uint
+	numBuckets uint
 }
 
-// NewFilter returns a new cuckoofilter with a given capacity.
+// NewFilter returns a new cuckoofilter sutable for the given number of elements.
+// When inserting more elements, insertion speed will drop significantly.
 // A capacity of 1000000 is a normal default, which allocates
 // about ~1MB on 64-bit machines.
-func NewFilter(capacity uint) *Filter {
-	capacity = getNextPow2(uint64(capacity)) / bucketSize
-	if capacity == 0 {
-		capacity = 1
+func NewFilter(numElements uint) *Filter {
+	numBuckets := uint(float64(numElements) / 0.95 / float64(bucketSize))
+	if numBuckets == 0 {
+		numBuckets = 1
 	}
-	buckets := make([]bucket, capacity)
+	buckets := make([]bucket, numBuckets)
 	return &Filter{
-		buckets:   buckets,
-		count:     0,
-		bucketPow: uint(bits.TrailingZeros(capacity)),
+		buckets:    buckets,
+		count:      0,
+		numBuckets: numBuckets,
 	}
 }
 
 // Lookup returns true if data is in the counter
 func (cf *Filter) Lookup(data []byte) bool {
-	i1, i2, fp := getIndicesAndFingerprint(data, cf.bucketPow)
+	i1, fp := getIndexAndFingerprint(data, cf.numBuckets)
+	i2 := getAltIndex(fp, i1, cf.numBuckets)
 	b1, b2 := cf.buckets[i1], cf.buckets[i2]
 	return b1.getFingerprintIndex(fp) > -1 || b2.getFingerprintIndex(fp) > -1
 }
@@ -55,8 +56,12 @@ func randi(i1, i2 uint) uint {
 
 // Insert inserts data into the counter and returns true upon success
 func (cf *Filter) Insert(data []byte) bool {
-	i1, i2, fp := getIndicesAndFingerprint(data, cf.bucketPow)
-	if cf.insert(fp, i1) || cf.insert(fp, i2) {
+	i1, fp := getIndexAndFingerprint(data, cf.numBuckets)
+	if cf.insert(fp, i1) {
+		return true
+	}
+	i2 := getAltIndex(fp, i1, cf.numBuckets)
+	if cf.insert(fp, i2) {
 		return true
 	}
 	return cf.reinsert(fp, randi(i1, i2))
@@ -85,7 +90,7 @@ func (cf *Filter) reinsert(fp fingerprint, i uint) bool {
 		cf.buckets[i][j], fp = fp, cf.buckets[i][j]
 
 		// look in the alternate location for that random element
-		i = getAltIndex(fp, i, cf.bucketPow)
+		i = getAltIndex(fp, i, cf.numBuckets)
 		if cf.insert(fp, i) {
 			return true
 		}
@@ -95,7 +100,8 @@ func (cf *Filter) reinsert(fp fingerprint, i uint) bool {
 
 // Delete data from counter if exists and return if deleted or not
 func (cf *Filter) Delete(data []byte) bool {
-	i1, i2, fp := getIndicesAndFingerprint(data, cf.bucketPow)
+	i1, fp := getIndexAndFingerprint(data, cf.numBuckets)
+	i2 := getAltIndex(fp, i1, cf.numBuckets)
 	return cf.delete(fp, i1) || cf.delete(fp, i2)
 }
 
@@ -144,8 +150,8 @@ func Decode(bytes []byte) (*Filter, error) {
 		}
 	}
 	return &Filter{
-		buckets:   buckets,
-		count:     count,
-		bucketPow: uint(bits.TrailingZeros(uint(len(buckets)))),
+		buckets:    buckets,
+		count:      count,
+		numBuckets: uint(len(buckets)),
 	}, nil
 }

@@ -4,16 +4,16 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
-	"math/bits"
 	"testing"
 )
 
 func TestIndexAndFP(t *testing.T) {
 	data := []byte("seif")
-	bucketPow := uint(bits.TrailingZeros(1024))
-	i1, i2, fp := getIndicesAndFingerprint(data, bucketPow)
-	i11 := getAltIndex(fp, i2, bucketPow)
-	i22 := getAltIndex(fp, i1, bucketPow)
+	numBuckets := uint(1024)
+	i1, fp := getIndexAndFingerprint(data, numBuckets)
+	i2 := getAltIndex(fp, i1, numBuckets)
+	i11 := getAltIndex(fp, i2, numBuckets)
+	i22 := getAltIndex(fp, i1, numBuckets)
 	if i1 != i11 {
 		t.Errorf("Expected i1 == i11, instead %d != %d", i1, i11)
 	}
