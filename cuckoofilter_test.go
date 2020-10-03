@@ -42,6 +42,31 @@ func TestInsertion(t *testing.T) {
 	}
 }
 
+func TestLookup(t *testing.T) {
+	cf := NewFilter(10)
+	cf.Insert([]byte("one"))
+	cf.Insert([]byte("two"))
+	cf.Insert([]byte("three"))
+
+	testCases := []struct {
+		word string
+		want bool
+	}{
+		{"one", true},
+		{"two", true},
+		{"three", true},
+		{"four", false},
+		{"five", false},
+	}
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("cf.Lookup(%q)", tc.word), func(t *testing.T) {
+			if got := cf.Lookup([]byte(tc.word)); got != tc.want {
+				t.Errorf("cf.Lookup(%q) got %v, want %v", tc.word, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestEncodeDecode(t *testing.T) {
 	cf := NewFilter(8)
 	cf.buckets = []bucket{
