@@ -2,7 +2,9 @@ package cuckoo
 
 import (
 	"bufio"
+	"crypto/rand"
 	"fmt"
+	"io"
 	"os"
 	"reflect"
 	"testing"
@@ -12,8 +14,7 @@ func TestInsertion(t *testing.T) {
 	cf := NewFilter(1000000)
 	fd, err := os.Open("/usr/share/dict/words")
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		t.Fatalf("failed reading words: %v", err)
 	}
 	scanner := bufio.NewScanner(fd)
 
@@ -64,6 +65,63 @@ func TestLookup(t *testing.T) {
 				t.Errorf("cf.Lookup(%q) got %v, want %v", tc.word, got, tc.want)
 			}
 		})
+	}
+}
+
+func TestFilter_Insert(t *testing.T) {
+	const cap = 10000
+	filter := NewFilter(cap)
+
+	var hash [32]byte
+	io.ReadFull(rand.Reader, hash[:])
+
+	for i := 0; i < 100; i++ {
+		filter.Insert(hash[:])
+	}
+
+	if got, want := filter.Count(), uint(100); got != want {
+		t.Errorf("inserting same item 100 times, Count() = %d, want %d", got, want)
+	}
+}
+
+func BenchmarkFilter_Reset(b *testing.B) {
+	const cap = 10000
+	filter := NewFilter(cap)
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		filter.Reset()
+	}
+}
+
+func BenchmarkFilter_Insert(b *testing.B) {
+	const cap = 10000
+	filter := NewFilter(cap)
+
+	b.ResetTimer()
+
+	var hash [32]byte
+	for i := 0; i < b.N; i++ {
+		io.ReadFull(rand.Reader, hash[:])
+		filter.Insert(hash[:])
+	}
+}
+
+func BenchmarkFilter_Lookup(b *testing.B) {
+	const cap = 10000
+	filter := NewFilter(cap)
+
+	var hash [32]byte
+	for i := 0; i < 10000; i++ {
+		io.ReadFull(rand.Reader, hash[:])
+		filter.Insert(hash[:])
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		io.ReadFull(rand.Reader, hash[:])
+		filter.Lookup(hash[:])
 	}
 }
 
