@@ -1,6 +1,6 @@
 # Cuckoo Filter
 
-[![GoDoc](https://godoc.org/github.com/seiflotfy/cuckoofilter?status.svg)](https://godoc.org/github.com/seiflotfy/cuckoofilter) [![CodeHunt.io](https://img.shields.io/badge/vote-codehunt.io-02AFD1.svg)](http://codehunt.io/sub/cuckoo-filter/?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![GoDoc](https://godoc.org/github.com/panmari/cuckoofilter?status.svg)](https://godoc.org/github.com/panmari/cuckoofilter)
 
 Cuckoo filter is a Bloom filter replacement for approximated set-membership queries. While Bloom filters are well-known space-efficient data structures to serve queries like "if item x is in a set?", they do not support deletion. Their variances to enable deletion (like counting Bloom filters) usually require much more space.
 
@@ -10,10 +10,23 @@ For details about the algorithm and citations please use this article for now
 
 ["Cuckoo Filter: Better Than Bloom" by Bin Fan, Dave Andersen and Michael Kaminsky](https://www.cs.cmu.edu/~dga/papers/cuckoo-conext2014.pdf)
 
-## Note
-This implementation uses a a static bucket size of 4 fingerprints and a fingerprint size of 1 byte based on my understanding of an optimal bucket/fingerprint/size ratio from the aforementioned paper.
+## Implementation details
 
-## Example usage:
+The paper cited above leaves several parameters to choose. In this implementation
+
+1. Every element has 2 possible bucket indices
+2. Buckets have a static size of 4 fingerprints
+3. Fingerprints have a static size of 16 bits
+
+1 and 2 are suggested to be the optimum by the authors. The choice of 3 comes down to the desired false positive rate. Given a target false positive rate of `r` and a bucket size `b`, they suggest choosing the fingerprint size `f` using
+
+    f >= log2(2b/r) bits
+
+With the 16 bit fingerprint size in this repository, you can expect `r ~= 0.0001`.
+[Other implementations](https://github.com/seiflotfy/cuckoofilter) use 8 bit, which correspond to a false positive rate of `r ~= 0.03`.
+
+## Example usage
+
 ```go
 package main
 
