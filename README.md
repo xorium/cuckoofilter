@@ -24,3 +24,33 @@ The paper cited above leaves several parameters to choose. In this implementatio
 
 With the 16 bit fingerprint size in this repository, you can expect `r ~= 0.0001`.
 [Other implementations](https://github.com/seiflotfy/cuckoofilter) use 8 bit, which correspond to a false positive rate of `r ~= 0.03`.
+
+## Example usage
+
+```golang
+import (
+	"fmt"
+
+	cuckoo "github.com/panmari/cuckoofilter"
+)
+
+func Example() {
+	cf := cuckoo.NewFilter(1000)
+
+	cf.Insert([]byte("pizza"))
+	cf.Insert([]byte("tacos"))
+	cf.Insert([]byte("tacos")) // Re-insertion is possible.
+
+	fmt.Println(cf.Lookup([]byte("pizza")))
+	fmt.Println(cf.Lookup([]byte("missing")))
+
+	cf.Reset()
+	fmt.Println(cf.Lookup([]byte("pizza")))
+	// Output:
+	// true
+	// false
+	// false
+}
+```
+
+For more examples, see [the example tests](https://github.com/panmari/cuckoofilter/blob/master/example_test.go).
