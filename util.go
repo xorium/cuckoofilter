@@ -6,16 +6,6 @@ import (
 	metro "github.com/dgryski/go-metro"
 )
 
-var (
-	masks = [65]uint{}
-)
-
-func init() {
-	for i := uint(0); i <= 64; i++ {
-		masks[i] = (1 << i) - 1
-	}
-}
-
 func getAltIndex(fp fingerprint, i uint, maxIndex uint) uint {
 	b := make([]byte, 2)
 	binary.LittleEndian.PutUint16(b, uint16(fp))
