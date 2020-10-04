@@ -24,7 +24,7 @@ func Example() {
 	// false
 }
 
-func ExampleLookup() {
+func ExampleFilter_Lookup() {
 	cf := cuckoo.NewFilter(1000)
 
 	cf.Insert([]byte("pizza"))
@@ -37,7 +37,7 @@ func ExampleLookup() {
 	// false
 }
 
-func ExampleDelete() {
+func ExampleFilter_Delete() {
 	cf := cuckoo.NewFilter(1000)
 
 	cf.Insert([]byte("pizza"))
