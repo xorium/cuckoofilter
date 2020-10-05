@@ -20,7 +20,12 @@ type Filter struct {
 // A capacity of 1000000 is a normal default, which allocates
 // about ~1MB on 64-bit machines.
 func NewFilter(numElements uint) *Filter {
-	numBuckets := uint(float64(numElements) / 0.95 / float64(bucketSize))
+	loadFactor := 0.95
+	if numElements < 1000 {
+		// For very small tables, collision rate tends to be too high with default load factor.
+		loadFactor = 0.5
+	}
+	numBuckets := uint(float64(numElements) / loadFactor / float64(bucketSize))
 	if numBuckets == 0 {
 		numBuckets = 1
 	}

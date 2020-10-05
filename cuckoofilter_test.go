@@ -44,7 +44,7 @@ func TestInsertion(t *testing.T) {
 }
 
 func TestLookup(t *testing.T) {
-	cf := NewFilter(10)
+	cf := NewFilter(4)
 	cf.Insert([]byte("one"))
 	cf.Insert([]byte("two"))
 	cf.Insert([]byte("three"))
@@ -73,14 +73,14 @@ func TestFilter_Insert(t *testing.T) {
 	filter := NewFilter(cap)
 
 	var hash [32]byte
-	io.ReadFull(rand.Reader, hash[:])
 
 	for i := 0; i < 100; i++ {
+		io.ReadFull(rand.Reader, hash[:])
 		filter.Insert(hash[:])
 	}
 
 	if got, want := filter.Count(), uint(100); got != want {
-		t.Errorf("inserting same item 100 times, Count() = %d, want %d", got, want)
+		t.Errorf("inserting 100 items, Count() = %d, want %d", got, want)
 	}
 }
 
@@ -126,12 +126,16 @@ func BenchmarkFilter_Lookup(b *testing.B) {
 }
 
 func TestEncodeDecode(t *testing.T) {
-	cf := NewFilter(8)
-	cf.buckets = []bucket{
-		[4]fingerprint{1, 2, 3, 4},
-		[4]fingerprint{5, 6, 7, 8},
-	}
-	cf.count = 8
+	cf := NewFilter(10)
+	cf.Insert([]byte{1})
+	cf.Insert([]byte{2})
+	cf.Insert([]byte{3})
+	cf.Insert([]byte{4})
+	cf.Insert([]byte{5})
+	cf.Insert([]byte{6})
+	cf.Insert([]byte{7})
+	cf.Insert([]byte{8})
+	cf.Insert([]byte{9})
 	encoded := cf.Encode()
 	got, err := Decode(encoded)
 	if err != nil {
