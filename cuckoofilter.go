@@ -68,14 +68,6 @@ func (cf *Filter) Insert(data []byte) bool {
 	return cf.reinsert(fp, randi(i1, i2))
 }
 
-// InsertUnique inserts data into the counter if not exists and returns true upon success
-func (cf *Filter) InsertUnique(data []byte) bool {
-	if cf.Lookup(data) {
-		return false
-	}
-	return cf.Insert(data)
-}
-
 func (cf *Filter) insert(fp fingerprint, i uint) bool {
 	if cf.buckets[i].insert(fp) {
 		cf.count++
