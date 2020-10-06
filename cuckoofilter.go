@@ -12,7 +12,8 @@ const maxCuckooCount = 500
 type Filter struct {
 	buckets []bucket
 	count   uint
-	// Bit mask set to len(buckets) - 1. Applying it mimics the operation x % len(buckets).
+	// Bit mask set to len(buckets) - 1. As len(buckets) is always a power of 2,
+	// applying this mask mimics the operation x % len(buckets).
 	bucketIndexMask uint
 }
 
