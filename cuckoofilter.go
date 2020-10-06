@@ -10,9 +10,10 @@ const maxCuckooCount = 500
 
 // Filter is a probabilistic counter
 type Filter struct {
-	buckets    []bucket
-	count      uint
-	numBuckets uint
+	buckets []bucket
+	count   uint
+	// Bit mask set to len(buckets) - 1. Applying it mimics the operation x % len(buckets).
+	bucketIndexMask uint
 }
 
 // NewFilter returns a new cuckoofilter sutable for the given number of elements.
@@ -29,16 +30,16 @@ func NewFilter(numElements uint) *Filter {
 	}
 	buckets := make([]bucket, numBuckets)
 	return &Filter{
-		buckets:    buckets,
-		count:      0,
-		numBuckets: numBuckets,
+		buckets:         buckets,
+		count:           0,
+		bucketIndexMask: uint(len(buckets) - 1),
 	}
 }
 
 // Lookup returns true if data is in the counter
 func (cf *Filter) Lookup(data []byte) bool {
-	i1, fp := getIndexAndFingerprint(data, cf.numBuckets)
-	i2 := getAltIndex(fp, i1, cf.numBuckets)
+	i1, fp := getIndexAndFingerprint(data, cf.bucketIndexMask)
+	i2 := getAltIndex(fp, i1, cf.bucketIndexMask)
 	b1, b2 := cf.buckets[i1], cf.buckets[i2]
 	return b1.getFingerprintIndex(fp) > -1 || b2.getFingerprintIndex(fp) > -1
 }
@@ -60,11 +61,11 @@ func randi(i1, i2 uint) uint {
 
 // Insert inserts data into the counter and returns true upon success
 func (cf *Filter) Insert(data []byte) bool {
-	i1, fp := getIndexAndFingerprint(data, cf.numBuckets)
+	i1, fp := getIndexAndFingerprint(data, cf.bucketIndexMask)
 	if cf.insert(fp, i1) {
 		return true
 	}
-	i2 := getAltIndex(fp, i1, cf.numBuckets)
+	i2 := getAltIndex(fp, i1, cf.bucketIndexMask)
 	if cf.insert(fp, i2) {
 		return true
 	}
@@ -86,7 +87,7 @@ func (cf *Filter) reinsert(fp fingerprint, i uint) bool {
 		cf.buckets[i][j], fp = fp, cf.buckets[i][j]
 
 		// look in the alternate location for that random element
-		i = getAltIndex(fp, i, cf.numBuckets)
+		i = getAltIndex(fp, i, cf.bucketIndexMask)
 		if cf.insert(fp, i) {
 			return true
 		}
@@ -96,8 +97,8 @@ func (cf *Filter) reinsert(fp fingerprint, i uint) bool {
 
 // Delete data from counter if exists and return if deleted or not
 func (cf *Filter) Delete(data []byte) bool {
-	i1, fp := getIndexAndFingerprint(data, cf.numBuckets)
-	i2 := getAltIndex(fp, i1, cf.numBuckets)
+	i1, fp := getIndexAndFingerprint(data, cf.bucketIndexMask)
+	i2 := getAltIndex(fp, i1, cf.bucketIndexMask)
 	return cf.delete(fp, i1) || cf.delete(fp, i2)
 }
 
@@ -146,8 +147,8 @@ func Decode(bytes []byte) (*Filter, error) {
 		}
 	}
 	return &Filter{
-		buckets:    buckets,
-		count:      count,
-		numBuckets: uint(len(buckets)),
+		buckets:         buckets,
+		count:           count,
+		bucketIndexMask: uint(len(buckets) - 1),
 	}, nil
 }

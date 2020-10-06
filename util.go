@@ -6,11 +6,11 @@ import (
 	metro "github.com/dgryski/go-metro"
 )
 
-func getAltIndex(fp fingerprint, i uint, maxIndex uint) uint {
+func getAltIndex(fp fingerprint, i uint, bucketIndexMask uint) uint {
 	b := make([]byte, 2)
 	binary.LittleEndian.PutUint16(b, uint16(fp))
 	hash := uint(metro.Hash64(b, 1337))
-	return (i ^ hash) % maxIndex
+	return (i ^ hash) & bucketIndexMask
 }
 
 func getFingerprint(hash uint64) fingerprint {
@@ -22,11 +22,11 @@ func getFingerprint(hash uint64) fingerprint {
 }
 
 // getIndexAndFingerprint returns the primary bucket index and fingerprint to be used
-func getIndexAndFingerprint(data []byte, maxIndex uint) (uint, fingerprint) {
+func getIndexAndFingerprint(data []byte, bucketIndexMask uint) (uint, fingerprint) {
 	hash := metro.Hash64(data, 1337)
 	f := getFingerprint(hash)
 	// Use least significant bits for deriving index.
-	i1 := uint(hash) % maxIndex
+	i1 := uint(hash) & bucketIndexMask
 	return i1, f
 }
 
