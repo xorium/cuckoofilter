@@ -27,3 +27,15 @@ func getIndexAndFingerprint(data []byte, maxIndex uint) (uint, fingerprint) {
 	i1 := uint(hash>>32) % maxIndex
 	return i1, f
 }
+
+func getNextPow2(n uint64) uint {
+	n--
+	n |= n >> 1
+	n |= n >> 2
+	n |= n >> 4
+	n |= n >> 8
+	n |= n >> 16
+	n |= n >> 32
+	n++
+	return uint(n)
+}
