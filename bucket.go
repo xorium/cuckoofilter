@@ -13,6 +13,7 @@ const (
 	nullFp              = 0
 	bucketSize          = 4
 	fingerprintSizeBits = 16
+	maxFingerprint      = (1 << fingerprintSizeBits) - 1
 )
 
 func (b *bucket) insert(fp fingerprint) bool {
