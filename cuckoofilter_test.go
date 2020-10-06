@@ -68,6 +68,27 @@ func TestLookup(t *testing.T) {
 	}
 }
 
+func TestFilter_LookupLarge(t *testing.T) {
+	const size = 10000
+	insertFail := 0
+	cf := NewFilter(size)
+	for i := 0; i < size; i++ {
+		if !cf.Insert([]byte{byte(i)}) {
+			insertFail++
+		}
+	}
+	fn := 0
+	for i := 0; i < size; i++ {
+		if !cf.Lookup([]byte{byte(i)}) {
+			fn++
+		}
+	}
+
+	if fn != 0 {
+		t.Errorf("cf.Lookup() with %d items. False negatives = %d, want 0. Insert failed %d times", size, fn, insertFail)
+	}
+}
+
 func TestFilter_Insert(t *testing.T) {
 	const cap = 10000
 	filter := NewFilter(cap)
