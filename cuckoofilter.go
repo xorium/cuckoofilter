@@ -6,7 +6,9 @@ import (
 	"math/rand"
 )
 
-const maxCuckooCount = 500
+// maxCuckooKickouts is the maximum number of times reinsert
+// is attempted.
+const maxCuckooKickouts = 500
 
 // Filter is a probabilistic counter
 type Filter struct {
@@ -82,12 +84,12 @@ func (cf *Filter) insert(fp fingerprint, i uint) bool {
 }
 
 func (cf *Filter) reinsert(fp fingerprint, i uint) bool {
-	for k := 0; k < maxCuckooCount; k++ {
+	for k := 0; k < maxCuckooKickouts; k++ {
 		j := rand.Intn(bucketSize)
-		// Swap fp with bucket entry.
+		// Swap fingerprint with bucket entry.
 		cf.buckets[i][j], fp = fp, cf.buckets[i][j]
 
-		// look in the alternate location for that random element
+		// Move kicked out fingerprint to alternate location.
 		i = getAltIndex(fp, i, cf.bucketIndexMask)
 		if cf.insert(fp, i) {
 			return true
