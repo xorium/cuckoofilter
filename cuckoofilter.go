@@ -118,6 +118,11 @@ func (cf *Filter) Count() uint {
 	return cf.count
 }
 
+// LoadFactor returns the fraction slots that are occupied.
+func (cf *Filter) LoadFactor() float64 {
+	return float64(cf.count) / float64(len(cf.buckets)*bucketSize)
+}
+
 // Encode returns a byte slice representing a Cuckoofilter
 func (cf *Filter) Encode() []byte {
 	bytes := make([]byte, 0, len(cf.buckets)*bucketSize*fingerprintSizeBits/8)

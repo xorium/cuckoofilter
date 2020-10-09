@@ -5,10 +5,20 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
+
+// optFloatNear considers float64 as equal if the relative delta is small.
+var optFloatNear = cmp.Comparer(func(x, y float64) bool {
+	delta := math.Abs(x - y)
+	mean := math.Abs(x+y) / 2.0
+	return delta/mean < 0.00001
+})
 
 func TestInsertion(t *testing.T) {
 	cf := NewFilter(1000000)
@@ -28,18 +38,22 @@ func TestInsertion(t *testing.T) {
 		values = append(values, s)
 	}
 
-	count := cf.Count()
-	if count != lineCount {
-		t.Errorf("Expected count = %d, instead count = %d", lineCount, count)
+	if got, want := cf.Count(), lineCount; got != want {
+		t.Errorf("After inserting: Count() = %d, want %d", got, want)
+	}
+	if got, want := cf.LoadFactor(), float64(0.097657); !cmp.Equal(got, want, optFloatNear) {
+		t.Errorf("After inserting: LoadFactor() = %f, want %f.", got, want)
 	}
 
 	for _, v := range values {
 		cf.Delete(v)
 	}
 
-	count = cf.Count()
-	if count != 0 {
-		t.Errorf("Expected count = 0, instead count == %d", count)
+	if got, want := cf.Count(), uint(0); got != want {
+		t.Errorf("After deleting: Count() = %d, want %d", got, want)
+	}
+	if got, want := cf.LoadFactor(), float64(0); got != want {
+		t.Errorf("After deleting: LoadFactor() = %f, want %f", got, want)
 	}
 }
 
