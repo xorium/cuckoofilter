@@ -160,6 +160,60 @@ func BenchmarkFilter_Lookup(b *testing.B) {
 	}
 }
 
+func TestDelete(t *testing.T) {
+	cf := NewFilter(8)
+	cf.Insert([]byte("one"))
+	cf.Insert([]byte("two"))
+	cf.Insert([]byte("three"))
+
+	testCases := []struct {
+		word string
+		want bool
+	}{
+		{"four", false},
+		{"five", false},
+		{"one", true},
+		{"two", true},
+		{"three", true},
+	}
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("cf.Delete(%q)", tc.word), func(t *testing.T) {
+			if got := cf.Delete([]byte(tc.word)); got != tc.want {
+				t.Errorf("cf.Delete(%q) got %v, want %v", tc.word, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestDeleteMultipleSame(t *testing.T) {
+	cf := NewFilter(4)
+	for i := 0; i < 5; i++ {
+		cf.Insert([]byte("some_item"))
+	}
+
+	testCases := []struct {
+		word      string
+		want      bool
+		wantCount uint
+	}{
+		{"missing", false, 5},
+		{"missing2", false, 5},
+		{"some_item", true, 4},
+		{"some_item", true, 3},
+		{"some_item", true, 2},
+		{"some_item", true, 1},
+		{"some_item", true, 0},
+		{"some_item", false, 0},
+	}
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("cf.Delete(%q)", tc.word), func(t *testing.T) {
+			if got, gotCount := cf.Delete([]byte(tc.word)), cf.Count(); got != tc.want || gotCount != tc.wantCount {
+				t.Errorf("cf.Delete(%q) = %v, count = %d; want %v, count = %d", tc.word, got, gotCount, tc.want, tc.wantCount)
+			}
+		})
+	}
+}
+
 func TestEncodeDecode(t *testing.T) {
 	cf := NewFilter(10)
 	cf.Insert([]byte{1})
