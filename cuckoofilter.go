@@ -39,12 +39,15 @@ func NewFilter(numElements uint) *Filter {
 	}
 }
 
-// Lookup returns true if data is in the counter
+// Lookup returns true if data is in the filter.
 func (cf *Filter) Lookup(data []byte) bool {
 	i1, fp := getIndexAndFingerprint(data, cf.bucketIndexMask)
+	if b := cf.buckets[i1]; b.contains(fp) {
+		return true
+	}
 	i2 := getAltIndex(fp, i1, cf.bucketIndexMask)
-	b1, b2 := cf.buckets[i1], cf.buckets[i2]
-	return b1.getFingerprintIndex(fp) > -1 || b2.getFingerprintIndex(fp) > -1
+	b := cf.buckets[i2]
+	return b.contains(fp)
 }
 
 // Reset removes all items from the filter, setting count to 0.

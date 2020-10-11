@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// fingerprint represents a single entry in a bucket.
 type fingerprint uint16
 
 type bucket [bucketSize]fingerprint
@@ -36,13 +37,13 @@ func (b *bucket) delete(fp fingerprint) bool {
 	return false
 }
 
-func (b *bucket) getFingerprintIndex(fp fingerprint) int {
-	for i, tfp := range b {
-		if tfp == fp {
-			return i
+func (b *bucket) contains(needle fingerprint) bool {
+	for _, fp := range b {
+		if fp == needle {
+			return true
 		}
 	}
-	return -1
+	return false
 }
 
 func (b *bucket) reset() {
