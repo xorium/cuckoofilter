@@ -25,8 +25,6 @@ While Bloom filters are well-known space-efficient data structures to serve quer
 
 Cuckoo filters provide the ﬂexibility to add and remove items dynamically. A cuckoo filter is based on cuckoo hashing (and therefore named as cuckoo filter). It is essentially a cuckoo hash table storing each key's fingerprint. Cuckoo hash tables can be highly compact, thus a cuckoo filter could use less space than conventional Bloom ﬁlters, for applications that require low false positive rates (< 3%).
 
-For details about the algorithm and citations please use this article:
-
 "Cuckoo Filter: Better Than Bloom" by Bin Fan, Dave Andersen and Michael Kaminsky
 (https://www.cs.cmu.edu/~dga/papers/cuckoo-conext2014.pdf)
 
