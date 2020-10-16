@@ -75,6 +75,7 @@ func TestLookup(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("cf.Lookup(%q)", tc.word), func(t *testing.T) {
+			t.Parallel()
 			if got := cf.Lookup([]byte(tc.word)); got != tc.want {
 				t.Errorf("cf.Lookup(%q) got %v, want %v", tc.word, got, tc.want)
 			}
