@@ -58,3 +58,5 @@ func Example() {
 ```
 
 For more examples, see [the example tests](https://github.com/panmari/cuckoofilter/blob/master/example_test.go).
+Operations on a filter are not thread safe by default. 
+See [this example](example_threadsafe_test.go) for using the filter concurrently.
