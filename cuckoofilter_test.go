@@ -24,7 +24,7 @@ func TestInsertion(t *testing.T) {
 	cf := NewFilter(1000000)
 	fd, err := os.Open("/usr/share/dict/words")
 	if err != nil {
-		t.Fatalf("failed reading words: %v", err)
+		t.Skipf("failed reading words: %v", err)
 	}
 	scanner := bufio.NewScanner(fd)
 
