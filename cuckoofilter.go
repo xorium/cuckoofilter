@@ -141,7 +141,7 @@ func Decode(bytes []byte) (*Filter, error) {
 	if len(bytes)%bucketSize != 0 {
 		return nil, fmt.Errorf("expected bytes to be multiple of %d, got %d", bucketSize, len(bytes))
 	}
-	buckets := make([]bucket, len(bytes)/4*8/fingerprintSizeBits)
+	buckets := make([]bucket, len(bytes)/bucketSize*8/fingerprintSizeBits)
 	for i, b := range buckets {
 		for j := range b {
 			var next []byte
