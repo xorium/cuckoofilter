@@ -41,8 +41,8 @@ func TestInsertion(t *testing.T) {
 	if got, want := cf.Count(), lineCount; got != want {
 		t.Errorf("After inserting: Count() = %d, want %d", got, want)
 	}
-	if got, want := cf.LoadFactor(), float64(0.097657); !cmp.Equal(got, want, optFloatNear) {
-		t.Errorf("After inserting: LoadFactor() = %f, want %f.", got, want)
+	if got, want := cf.LoadFactor(), float64(0.95); got >= want {
+		t.Errorf("After inserting: LoadFactor() = %f, want less than %f.", got, want)
 	}
 
 	for _, v := range values {
