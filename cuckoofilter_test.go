@@ -7,7 +7,6 @@ import (
 	"io"
 	"math"
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -131,33 +130,45 @@ func BenchmarkFilter_Reset(b *testing.B) {
 	}
 }
 
-func BenchmarkFilter_Insert(b *testing.B) {
-	const cap = 10000
-	filter := NewFilter(cap)
+// benchmarkKeys returns a slice of keys for benchmarking with length `size`.
+func benchmarkKeys(b *testing.B, size int) [][]byte {
+	b.Helper()
+	keys := make([][]byte, size)
+	for i := range keys {
+		keys[i] = make([]byte, 32)
+		if _, err := io.ReadFull(rand.Reader, keys[i]); err != nil {
+			b.Error(err)
+		}
+	}
+	return keys
+}
 
+func BenchmarkFilter_Insert(b *testing.B) {
+	const size = 10000
+	keys := benchmarkKeys(b, int(float64(size)*0.8))
 	b.ResetTimer()
 
-	var hash [32]byte
-	for i := 0; i < b.N; i++ {
-		io.ReadFull(rand.Reader, hash[:])
-		filter.Insert(hash[:])
+	for i := 0; i < b.N; {
+		b.StopTimer()
+		filter := NewFilter(size)
+		b.StartTimer()
+		for _, k := range keys {
+			filter.Insert(k)
+			i++
+		}
 	}
 }
 
 func BenchmarkFilter_Lookup(b *testing.B) {
-	const cap = 10000
-	filter := NewFilter(cap)
-
-	var hash [32]byte
-	for i := 0; i < 10000; i++ {
-		io.ReadFull(rand.Reader, hash[:])
-		filter.Insert(hash[:])
-	}
+	filter := NewFilter(10000)
+	keys := benchmarkKeys(b, 10000)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		io.ReadFull(rand.Reader, hash[:])
-		filter.Lookup(hash[:])
+	for i := 0; i < b.N; {
+		for _, k := range keys {
+			filter.Lookup(k)
+			i++
+		}
 	}
 }
 
@@ -206,6 +217,7 @@ func TestDeleteMultipleSame(t *testing.T) {
 		{"some_item", true, 0},
 		{"some_item", false, 0},
 	}
+	t.Logf("Filter state full: %v", cf)
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("cf.Delete(%q)", tc.word), func(t *testing.T) {
 			if got, gotCount := cf.Delete([]byte(tc.word)), cf.Count(); got != tc.want || gotCount != tc.wantCount {
@@ -231,7 +243,7 @@ func TestEncodeDecode(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
-	if !reflect.DeepEqual(cf, got) {
+	if !cmp.Equal(cf, got, cmp.AllowUnexported(Filter{})) {
 		t.Errorf("Decode = %v, want %v, encoded = %v", got, cf, encoded)
 	}
 }
