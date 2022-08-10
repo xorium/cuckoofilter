@@ -2,10 +2,9 @@ package cuckoo
 
 import (
 	"bufio"
-	"crypto/rand"
 	"fmt"
-	"io"
 	"math"
+	"math/rand"
 	"os"
 	"testing"
 
@@ -104,14 +103,13 @@ func TestFilter_LookupLarge(t *testing.T) {
 }
 
 func TestFilter_Insert(t *testing.T) {
-	const cap = 10000
-	filter := NewFilter(cap)
+	filter := NewFilter(10000)
+	rng := rand.New(rand.NewSource(int64(42)))
 
-	var hash [32]byte
-
+	hash := make([]byte, 32)
 	for i := 0; i < 100; i++ {
-		io.ReadFull(rand.Reader, hash[:])
-		filter.Insert(hash[:])
+		rng.Read(hash)
+		filter.Insert(hash)
 	}
 
 	if got, want := filter.Count(), uint(100); got != want {
@@ -134,9 +132,10 @@ func BenchmarkFilter_Reset(b *testing.B) {
 func benchmarkKeys(b *testing.B, size int) [][]byte {
 	b.Helper()
 	keys := make([][]byte, size)
+	rng := rand.New(rand.NewSource(int64(size)))
 	for i := range keys {
 		keys[i] = make([]byte, 32)
-		if _, err := io.ReadFull(rand.Reader, keys[i]); err != nil {
+		if _, err := rng.Read(keys[i]); err != nil {
 			b.Error(err)
 		}
 	}
