@@ -159,13 +159,21 @@ func BenchmarkFilter_Insert(b *testing.B) {
 }
 
 func BenchmarkFilter_Lookup(b *testing.B) {
-	filter := NewFilter(10000)
+	f := NewFilter(10000)
 	keys := benchmarkKeys(b, 10000)
+	for _, k := range keys {
+		f.Insert(k)
+	}
+	// One half is likely missing, other half is present.
+	lookupKeys := append(benchmarkKeys(b, 1000), keys[0:1000]...)
+	rand.New(rand.NewSource(42)).Shuffle(2000, func(i, j int) {
+		lookupKeys[i] = lookupKeys[j]
+	})
 
 	b.ResetTimer()
 	for i := 0; i < b.N; {
-		for _, k := range keys {
-			filter.Lookup(k)
+		for _, k := range lookupKeys {
+			f.Lookup(k)
 			i++
 		}
 	}
@@ -199,7 +207,9 @@ func TestDelete(t *testing.T) {
 func TestDeleteMultipleSame(t *testing.T) {
 	cf := NewFilter(4)
 	for i := 0; i < 5; i++ {
-		cf.Insert([]byte("some_item"))
+		if !cf.Insert([]byte("some_item")) {
+			t.Error("Failed insert during setup.")
+		}
 	}
 
 	testCases := []struct {
