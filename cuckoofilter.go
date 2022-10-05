@@ -1,6 +1,7 @@
 package cuckoo
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"math/rand"
@@ -126,38 +127,37 @@ const bytesPerBucket = bucketSize * fingerprintSizeBits / 8
 
 // Encode returns a byte slice representing a Cuckoofilter.
 func (cf *Filter) Encode() []byte {
-	bytes := make([]byte, 0, len(cf.buckets)*bytesPerBucket)
+	res := new(bytes.Buffer)
+	res.Grow(len(cf.buckets) * bytesPerBucket)
+
 	for _, b := range cf.buckets {
-		for _, f := range b {
-			next := make([]byte, 2)
-			binary.LittleEndian.PutUint16(next, uint16(f))
-			bytes = append(bytes, next...)
+		for _, fp := range b {
+			binary.Write(res, binary.LittleEndian, fp)
 		}
 	}
-	return bytes
+	return res.Bytes()
 }
 
 // Decode returns a Cuckoofilter from a byte slice created using Encode.
-func Decode(bytes []byte) (*Filter, error) {
-	if len(bytes)%bucketSize != 0 {
-		return nil, fmt.Errorf("bytes must to be multiple of %d, got %d", bucketSize, len(bytes))
+func Decode(data []byte) (*Filter, error) {
+	if len(data)%bucketSize != 0 {
+		return nil, fmt.Errorf("bytes must to be multiple of %d, got %d", bucketSize, len(data))
 	}
-	numBuckets := len(bytes) / bytesPerBucket
+	numBuckets := len(data) / bytesPerBucket
 	if numBuckets < 1 {
-		return nil, fmt.Errorf("bytes can not be smaller than %d, size in bytes is %d", bytesPerBucket, len(bytes))
+		return nil, fmt.Errorf("bytes can not be smaller than %d, size in bytes is %d", bytesPerBucket, len(data))
 	}
 	if getNextPow2(uint64(numBuckets)) != uint(numBuckets) {
 		return nil, fmt.Errorf("numBuckets must to be a power of 2, got %d", numBuckets)
 	}
 	var count uint
 	buckets := make([]bucket, numBuckets)
+	reader := bytes.NewReader(data)
+
 	for i, b := range buckets {
 		for j := range b {
-			var next []byte
-			next, bytes = bytes[:2], bytes[2:]
-
-			if fp := fingerprint(binary.LittleEndian.Uint16(next)); fp != 0 {
-				buckets[i][j] = fp
+			binary.Read(reader, binary.LittleEndian, &buckets[i][j])
+			if buckets[i][j] != 0 {
 				count++
 			}
 		}
