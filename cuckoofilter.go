@@ -157,7 +157,7 @@ func Decode(data []byte) (*Filter, error) {
 	for i, b := range buckets {
 		for j := range b {
 			binary.Read(reader, binary.LittleEndian, &buckets[i][j])
-			if buckets[i][j] != 0 {
+			if buckets[i][j] != nullFp {
 				count++
 			}
 		}
