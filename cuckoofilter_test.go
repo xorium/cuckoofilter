@@ -145,7 +145,7 @@ func benchmarkKeys(b *testing.B, size int) [][]byte {
 
 func BenchmarkFilter_Insert(b *testing.B) {
 	const size = 10000
-	keys := benchmarkKeys(b, int(float64(size)*0.8))
+	keys := benchmarkKeys(b, int(float64(size)*0.9))
 	b.ResetTimer()
 
 	for i := 0; i < b.N; {
@@ -154,29 +154,30 @@ func BenchmarkFilter_Insert(b *testing.B) {
 		b.StartTimer()
 		for _, k := range keys {
 			filter.Insert(k)
-			i++
 		}
+		i += len(keys)
 	}
 }
 
 func BenchmarkFilter_Lookup(b *testing.B) {
-	f := NewFilter(10000)
-	keys := benchmarkKeys(b, 10000)
+	const size = 10000
+	f := NewFilter(size)
+	keys := benchmarkKeys(b, int(float64(size)*0.9))
 	for _, k := range keys {
 		f.Insert(k)
 	}
 	// One half is likely missing, other half is present.
 	lookupKeys := append(benchmarkKeys(b, 1000), keys[0:1000]...)
-	rand.New(rand.NewSource(42)).Shuffle(2000, func(i, j int) {
-		lookupKeys[i] = lookupKeys[j]
+	rand.New(rand.NewSource(42)).Shuffle(len(lookupKeys), func(i, j int) {
+		lookupKeys[i], lookupKeys[j] = lookupKeys[j], lookupKeys[i]
 	})
 
 	b.ResetTimer()
 	for i := 0; i < b.N; {
 		for _, k := range lookupKeys {
 			f.Lookup(k)
-			i++
 		}
+		i += len(lookupKeys)
 	}
 }
 
