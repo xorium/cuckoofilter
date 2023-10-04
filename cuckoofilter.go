@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"math/rand"
 )
 
 // maxCuckooKickouts is the maximum number of times reinsert
@@ -85,7 +84,7 @@ func (cf *Filter) insert(fp fingerprint, i uint) bool {
 
 func (cf *Filter) reinsert(fp fingerprint, i uint) bool {
 	for k := 0; k < maxCuckooKickouts; k++ {
-		j := rand.Intn(bucketSize)
+		j := fastrandn(bucketSize)
 		// Swap fingerprint with bucket entry.
 		cf.buckets[i][j], fp = fp, cf.buckets[i][j]
 
