@@ -14,7 +14,7 @@ type bucket [bucketSize]fingerprint
 const (
 	nullFp              = 0
 	bucketSize          = 4
-	fingerprintSizeBits = 16
+	fingerprintSizeBits = 64
 	maxFingerprint      = (1 << fingerprintSizeBits) - 1
 )
 
