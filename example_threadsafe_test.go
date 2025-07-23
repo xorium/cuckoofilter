@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	cuckoo "github.com/panmari/cuckoofilter"
+	cuckoo "github.com/xorium/cuckoofilter"
 )
 
 // Small wrapper around cuckoo filter making it thread safe.

@@ -1,8 +1,8 @@
 # Cuckoo Filter
 
-[![GitHub go.mod Go version of a Go module](https://img.shields.io/github/go-mod/go-version/panmari/cuckoofilter.svg)](https://github.com/panmari/cuckoofilter)
-[![GoDoc](https://godoc.org/github.com/panmari/cuckoofilter?status.svg)](https://godoc.org/github.com/panmari/cuckoofilter)
-[![GoReportCard](https://goreportcard.com/badge/github.com/panmari/cuckoofilter)](https://goreportcard.com/report/github.com/panmari/cuckoofilter)
+[![GitHub go.mod Go version of a Go module](https://img.shields.io/github/go-mod/go-version/panmari/cuckoofilter.svg)](https://github.com/xorium/cuckoofilter)
+[![GoDoc](https://godoc.org/github.com/xorium/cuckoofilter?status.svg)](https://godoc.org/github.com/xorium/cuckoofilter)
+[![GoReportCard](https://goreportcard.com/badge/github.com/xorium/cuckoofilter)](https://goreportcard.com/report/github.com/xorium/cuckoofilter)
 
 Well-tuned, production-ready cuckoo filter that performs best in class for low false positive rates (at around 0.01%). For details, see [full evaluation](https://panmari.github.io/2020/10/09/probabilistic-filter-golang.html).
 
@@ -57,6 +57,6 @@ func Example() {
 }
 ```
 
-For more examples, see [the example tests](https://github.com/panmari/cuckoofilter/blob/master/example_test.go).
+For more examples, see [the example tests](https://github.com/xorium/cuckoofilter/blob/master/example_test.go).
 Operations on a filter are not thread safe by default. 
 See [this example](example_threadsafe_test.go) for using the filter concurrently.

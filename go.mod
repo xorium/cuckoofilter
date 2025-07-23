@@ -1,4 +1,4 @@
-module github.com/panmari/cuckoofilter
+module github.com/xorium/cuckoofilter
 
 go 1.15
 
