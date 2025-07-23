@@ -20,13 +20,13 @@ The paper cited above leaves several parameters to choose. In this implementatio
 
 1. Every element has 2 possible bucket indices
 2. Buckets have a static size of 4 fingerprints
-3. Fingerprints have a static size of 16 bits
+3. Fingerprints have a static size of 64 bits
 
 1 and 2 are suggested to be the optimum by the authors. The choice of 3 comes down to the desired false positive rate. Given a target false positive rate of `r` and a bucket size `b`, they suggest choosing the fingerprint size `f` using
 
     f >= log2(2b/r) bits
 
-With the 16 bit fingerprint size in this repository, you can expect `r ~= 0.0001`.
+With the 64 bit fingerprint size in this repository, you can expect `r ~= 4.12 * 10⁻¹⁹`.
 [Other implementations](https://github.com/seiflotfy/cuckoofilter) use 8 bit, which correspond to a false positive rate of `r ~= 0.03`.
 
 ## Example usage
@@ -35,7 +35,7 @@ With the 16 bit fingerprint size in this repository, you can expect `r ~= 0.0001
 import (
 	"fmt"
 
-	cuckoo "github.com/panmari/cuckoofilter"
+	cuckoo "github.com/xorium/cuckoofilter"
 )
 
 func Example() {
